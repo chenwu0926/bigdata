@@ -1,6 +1,5 @@
 package com.whirly.util
 
-import com.ggstar.util.ip.IpHelper
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
@@ -78,8 +77,7 @@ object AccessConvertUtil {
         }
       }*/
 
-      val city = IpHelper.findRegionByIp(ip)
-      //IpUtils.getCity(ip)
+      val city = IpUtil.findRegionByIp(ip)  // 使用 ip2region 解析
       val time = splits(0)
       val day = time.substring(0, 10).replaceAll("-", "")
 
