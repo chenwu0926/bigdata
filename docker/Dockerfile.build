@@ -1,0 +1,28 @@
+# 多阶段构建：在 Docker 内编译 Maven 项目
+# 无需本地安装 Maven
+
+# ========== 阶段1: 编译 ==========
+FROM maven:3.8-openjdk-8 AS builder
+
+WORKDIR /build
+
+# 复制 pom.xml 先下载依赖（利用 Docker 缓存）
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 复制源代码并编译
+COPY src ./src
+RUN mvn clean package -DskipTests -q
+
+# ========== 阶段2: 运行镜像 ==========
+FROM flink:1.14.6-scala_2.11-java8
+
+# 复制编译好的 JAR
+COPY --from=builder /build/target/ImoocLogAnalysis-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/flink/usrlib/
+
+# 设置环境变量
+ENV KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+ENV REDIS_HOST=redis
+ENV MYSQL_HOST=mysql
+
+WORKDIR /opt/flink
