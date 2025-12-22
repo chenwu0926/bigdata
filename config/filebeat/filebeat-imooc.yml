@@ -1,0 +1,51 @@
+# Filebeat 配置文件
+# 用于收集 Nginx/Tomcat 日志并发送到 Kafka
+
+filebeat.inputs:
+  # Nginx 访问日志
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/nginx/access.log
+    fields:
+      log_type: nginx
+    fields_under_root: true
+    # 多行日志合并（如果需要）
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Tomcat 访问日志
+  - type: log
+    enabled: true
+    paths:
+      - /opt/tomcat/logs/localhost_access_log.*.txt
+    fields:
+      log_type: tomcat
+    fields_under_root: true
+
+# 处理器：添加主机信息
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+
+# 输出到 Kafka
+output.kafka:
+  enabled: true
+  hosts: ["localhost:9092"]
+  topic: "imooc-access-log"
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+# 日志配置
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

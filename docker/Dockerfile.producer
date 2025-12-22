@@ -1,0 +1,22 @@
+# 数据生产者镜像
+FROM openjdk:8-jre-slim
+
+LABEL maintainer="imooc-log-analysis"
+LABEL description="Kafka Log Data Producer"
+
+WORKDIR /app
+
+# 复制 JAR 文件
+COPY jars/ImoocLogAnalysis-1.0-SNAPSHOT-jar-with-dependencies.jar /app/app.jar
+
+# 环境变量
+ENV KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+ENV KAFKA_TOPIC=imooc-access-log
+ENV PRODUCER_MODE=random
+ENV CSV_FILE=/data/imooc-log/cleanedCsv/day=20161110/part-00000-286a6aa8-f497-44a6-b27a-60c9bf6d67d6.c000.csv
+
+# 启动脚本
+COPY scripts/start-producer.sh /app/start-producer.sh
+RUN chmod +x /app/start-producer.sh
+
+ENTRYPOINT ["/app/start-producer.sh"]
