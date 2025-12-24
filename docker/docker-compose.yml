@@ -117,6 +117,7 @@ services:
       # 应用配置 - 使用 Docker 内部网络地址
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: imooc-access-log
+      RAW_KAFKA_TOPIC: raw-access-log
       KAFKA_GROUP_ID: imooc-log-consumer
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -154,6 +155,7 @@ services:
       # 应用配置 - 使用 Docker 内部网络地址
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: imooc-access-log
+      RAW_KAFKA_TOPIC: raw-access-log
       KAFKA_GROUP_ID: imooc-log-consumer
       REDIS_HOST: redis
       REDIS_PORT: 6379
