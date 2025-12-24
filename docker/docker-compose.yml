@@ -71,7 +71,7 @@ services:
     image: redis:7-alpine
     container_name: redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -114,8 +114,19 @@ services:
       - "8081:8081"
     command: jobmanager
     environment:
-      - |
-        FLINK_PROPERTIES=
+      # 应用配置 - 使用 Docker 内部网络地址
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: imooc-access-log
+      KAFKA_GROUP_ID: imooc-log-consumer
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: imooc_log
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
+      # Flink 配置
+      FLINK_PROPERTIES: |
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 4
         parallelism.default: 2
@@ -140,8 +151,19 @@ services:
     hostname: taskmanager
     command: taskmanager
     environment:
-      - |
-        FLINK_PROPERTIES=
+      # 应用配置 - 使用 Docker 内部网络地址
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: imooc-access-log
+      KAFKA_GROUP_ID: imooc-log-consumer
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: imooc_log
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
+      # Flink 配置
+      FLINK_PROPERTIES: |
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 4
         taskmanager.memory.process.size: 2g
@@ -153,7 +175,7 @@ services:
       - imooc-net
     depends_on:
       - flink-jobmanager
-    scale: 1  # 可以调整 TaskManager 数量
+    scale: 1
 
   # ==================== 数据生产者 ====================
   log-producer:
@@ -164,7 +186,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: imooc-access-log
-      PRODUCER_MODE: random  # random 或 csv
+      PRODUCER_MODE: random
     volumes:
       - ../data:/data
     networks:
@@ -173,7 +195,7 @@ services:
       kafka:
         condition: service_healthy
     profiles:
-      - producer  # 需要显式启动
+      - producer
 
 networks:
   imooc-net:

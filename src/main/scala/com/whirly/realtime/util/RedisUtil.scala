@@ -42,7 +42,7 @@ object RedisUtil {
       val key = s"realtime:pv:uv:$cmsType:$cmsId:$windowEnd"
       jedis.hset(key, "pv", pv.toString)
       jedis.hset(key, "uv", uv.toString)
-      jedis.expire(key, 3600 * 24)  // 24小时过期
+      jedis.expire(key, 3600L * 24)  // 24小时过期
     } finally {
       jedis.close()
     }
@@ -57,7 +57,7 @@ object RedisUtil {
     try {
       val key = s"realtime:topn:$cmsType:$windowEnd"
       jedis.zadd(key, score.toDouble, cmsId.toString)
-      jedis.expire(key, 3600 * 24)  // 24小时过期
+      jedis.expire(key, 3600L * 24)  // 24小时过期
     } finally {
       jedis.close()
     }
@@ -72,7 +72,7 @@ object RedisUtil {
     try {
       val key = s"realtime:online:$windowEnd"
       jedis.set(key, count.toString)
-      jedis.expire(key, 3600 * 24)  // 24小时过期
+      jedis.expire(key, 3600L * 24)  // 24小时过期
     } finally {
       jedis.close()
     }

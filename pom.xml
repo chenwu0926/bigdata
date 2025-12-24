@@ -128,6 +128,7 @@
                             <args>
                                 <arg>-dependencyfile</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
+                                <arg>-target:jvm-1.8</arg>
                             </args>
                         </configuration>
                     </execution>
