@@ -7,11 +7,11 @@ import com.whirly.realtime.source.RawLogDeserializer
 import com.whirly.realtime.util.AccessLogCleanUtil
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.connector.base.DeliveryGuarantee
-import org.apache.flink.connector.kafka.sink.{KafkaRecordSerializationSchema, KafkaSink}
 import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer
+import java.util.Properties
 
 /**
  * 实时数据清洗作业
@@ -79,27 +79,26 @@ object DataCleanJob {
       .filter(log => AccessLogCleanUtil.isValidIp(log.ip))
 
     // 统计清洗结果
-    cleanedStream.map(log => {
+    val loggedStream = cleanedStream.map(log => {
       println(s"[Cleaned] ${log.cmsType}/${log.cmsId} - ${log.ip} - ${log.city}")
       log
     })
 
-    // 创建 Kafka Sink（输出清洗后的数据）
-    val kafkaSink = KafkaSink.builder[String]()
-      .setBootstrapServers(FlinkConfig.KAFKA_BOOTSTRAP_SERVERS)
-      .setRecordSerializer(
-        KafkaRecordSerializationSchema.builder()
-          .setTopic(CLEANED_TOPIC)
-          .setValueSerializationSchema(new SimpleStringSchema())
-          .build()
-      )
-      .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
-      .build()
+    // 创建 Kafka Producer 配置
+    val kafkaProps = new Properties()
+    kafkaProps.setProperty("bootstrap.servers", FlinkConfig.KAFKA_BOOTSTRAP_SERVERS)
+
+    // 创建 Kafka Producer（Flink 1.14 兼容方式）
+    val kafkaProducer = new FlinkKafkaProducer[String](
+      CLEANED_TOPIC,
+      new SimpleStringSchema(),
+      kafkaProps
+    )
 
     // 转换为 JSON 并写入 Kafka
-    cleanedStream
+    loggedStream
       .map(log => accessLogToJson(log))
-      .sinkTo(kafkaSink)
+      .addSink(kafkaProducer)
 
     // 同时输出清洗统计到控制台（可选）
     // printCleanStats(rawLogStream, cleanedStream)
